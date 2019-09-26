@@ -26,3 +26,10 @@ plot(pressure)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+# 0. Read datasets
+```{r}
+news_data <- read.csv('data/dat_train.csv')
+str(news_data)
+```
+

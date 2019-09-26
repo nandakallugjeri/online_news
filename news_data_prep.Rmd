@@ -1,11 +1,11 @@
 ---
-title: "news_data_prep"
+title: "Mashable News - Use Case"
 output:
   html_document: default
   pdf_document: default
 ---
 
-```{r}
+```{r results="hide",  include=FALSE}
 library(tidyverse)
 library(caret)
 library(corrplot)
@@ -20,40 +20,17 @@ set.seed(1234)
 ```
 
 
-# 0. Read datasets
+# 1. Read datasets
 ```{r}
 
  
 news_data <- read.csv('Data/dat_train.csv')
 
 str(news_data)
-#unique(news_data$n_non_stop_words)
-
-
-
-#pairs(news_data)
-
-```
-#1. Visualisation plots 
-
-```{r}
-
-num<-unlist(lapply(news_data, is.numeric))
-news_data_cor<-news_data[,num]
-cor.matrix<-cor(news_data_cor)
-corrplot(cor.matrix, order="hclust", tl.pos='n')
-highcor<-findCorrelation(cor.matrix, cutoff=0.9, exact=TRUE, name=TRUE)
-
- 
-#distribution of target variable 
-table(news_data$popular)
-
  
 
-
-
 ```
-# Data enginering 
+# 2. Data enginering 
 ```{r}
 
 news_data$weekday_is_monday <- as.factor(news_data$weekday_is_monday )
@@ -69,7 +46,45 @@ news_data$popular<-as.factor(ifelse(news_data$shares>1400,"yes","no"))
 ```
 
 
-# Test/Train
+# 3. Visualisation plots 
+
+```{r}
+ 
+
+ggplot(news_data, aes(as.factor(is_weekend)))+
+geom_bar(aes(fill = popular))+
+labs(x = "Article posted at the weekend",y = "Number of articles based on popularity")
+
+ggplot(news_data, aes(as.factor(data_channel_is_socmed)))+
+geom_bar(aes(fill = popular))+
+labs(x = "Social media channel",y = "Number of articles based on popularity")
+
+ 
+
+
+ggplot(news_data, aes(x = news_data$kw_avg_avg)) +
+  geom_histogram(aes(color = popular, fill = popular), 
+                position = "identity", bins = 500, alpha = 0.4) +
+  coord_cartesian(xlim = c(0, 7500), ylim = c(0, 750))+
+labs(x = "Avg. keyword (avg. shares)")
+
+ 
+
+num<-unlist(lapply(news_data, is.numeric))
+news_data_cor<-news_data[,num]
+cor.matrix<-cor(news_data_cor)
+corrplot(cor.matrix, order="hclust", tl.pos='n')
+highcor<-findCorrelation(cor.matrix, cutoff=0.9, exact=TRUE, name=TRUE)
+
+ 
+#distribution of target variable 
+table(news_data$popular)
+
+
+```
+
+
+# 4.Test/Train Dataset
 
 ```{r , cache= TRUE}
  
@@ -83,8 +98,8 @@ news_train <- news_data[train_ind, ]
 news_test <- news_data[-train_ind, ]
 ```
 
-# Model Creation 
-```{r , cache= TRUE, echo=FALSE }
+# 5.Model Creation 
+```{r , cache= TRUE,  results="hide"}
 myControl <- trainControl(
   method = "cv",
   number = 5,
@@ -114,7 +129,14 @@ model_gbm <- train(popular ~ kw_avg_avg	+
                      method = "gbm",
                      trControl = myControl
                    )
-model_gbm
+ 
+
+
+
+```
+# 6.Model Performance 
+```{r}
+
 summary(model_gbm)
 
 gbm.pred <- predict(model_gbm, news_test )
@@ -125,4 +147,5 @@ gbm.confmat
 
 varImp(model_gbm)
 ```
+
 

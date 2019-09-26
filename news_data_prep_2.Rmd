@@ -1,0 +1,52 @@
+---
+title: "What Drives Article Popularity?"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(caret)
+library(ggplot2)
+library(dplyr)
+library(gbm)
+library(tidyverse)
+library(corrplot)
+library(party)
+set.seed(1234)
+
+news_data <- read.csv('Data/dat_train.csv')
+news_data$popular<-ifelse(news_data$shares<1400,"no","yes")
+```
+
+#1. Visualisation plots 
+```{r}
+
+
+```
+
+#2. Model 
+
+```{r,cache=TRUE,include=FALSE}
+myControl <- trainControl(
+  method = "cv",
+  number = 5,
+  verboseIter = FALSE
+)
+model_gbm <- train(popular ~., data = news_data[,!names(news_data) %in% c("url","timedelta","shares")], method = "gbm",
+                   trControl = myControl)
+```
+
+```{r}
+model_gbm
+summary(model_gbm)
+plot(varImp(model_gbm),5)
+
+ 
+```
+
+
+
+
+
+
+

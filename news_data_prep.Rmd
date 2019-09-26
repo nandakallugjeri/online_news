@@ -5,17 +5,13 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(caret)
+library(ggplot2)
+library(dplyr)
+library(gbm)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
 
 ## Including Plots
 
@@ -29,7 +25,17 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 
 # 0. Read datasets
 ```{r}
-news_data <- read.csv('data/dat_train.csv')
-str(news_data)
+news_data <- read.csv('Data/dat_train.csv')
+news_data$popular<-ifelse(news_data$shares<1400,"yes","no")
+#str(news_data)
+myControl <- trainControl(
+  method = "cv",
+  number = 5,
+  verboseIter = FALSE
+)
+model_gbm <- train(popular ~., data = news_data[,!names(news_data) %in% c("url","timedelta","shares")], method = "gbm",
+                   trControl = myControl)
+model_gbm
+summary(model_gbm)
 ```
 

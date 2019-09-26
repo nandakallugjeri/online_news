@@ -32,7 +32,7 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 # 0. Read datasets
 ```{r}
 
-news_data <- read.csv('data/dat_train.csv')
+ 
 str(news_data)
 #unique(news_data$n_non_stop_words)
 
@@ -71,12 +71,12 @@ news_data$weekday_is_sunday <- as.factor(news_data$weekday_is_sunday )
 
 str(news_data)
 
-ggplot( aes(x=shares), data = news_data  )+
-  geom_histogram(binwidth=10)
+ggplot( aes(x=popular), data = news_data  )+
+  geom_histogram()
 
 arrange(unique(news_data$shares))
 
-
+table(news_data$popular)
 
 
 news_data <- read.csv('Data/dat_train.csv')

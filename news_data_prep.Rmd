@@ -1,6 +1,8 @@
 ---
 title: "news_data_prep"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r}
@@ -47,31 +49,7 @@ highcor<-findCorrelation(cor.matrix, cutoff=0.9, exact=TRUE, name=TRUE)
 table(news_data$popular)
 
  
-#Plot 
 
-ggplot(data=news_data, aes(is_weekend)) +
-  geom_bar(aes(fill = popular))
-
-ggplot(data=news_data, aes(kw_avg_avg  )) +
-  geom_histogram(aes(fill = popular), binwidth = 10)
-
-ggplot(data = melt(news_data[,-c(1,2,ncol(news_data))]), aes(x = value)) + 
-  stat_density() + 
-  facet_wrap(~variable, scales = "free")
-
-
-news_data %>%
-  keep(is.numeric) %>% 
-  gather() %>% 
-  ggplot(aes(value)) +
-    facet_wrap(~ key, scales = "free") +
-    geom_histogram()
-
-
-
-
-
-#str(news_data)
 
 
 ```
@@ -93,7 +71,7 @@ news_data$popular<-as.factor(ifelse(news_data$shares>1400,"yes","no"))
 
 # Test/Train
 
-```{r}
+```{r , cache= TRUE}
  
 ## 80% of the sample size
 smp_size <- floor(0.80 * nrow(news_data))
@@ -106,7 +84,7 @@ news_test <- news_data[-train_ind, ]
 ```
 
 # Model Creation 
-```{r}
+```{r , cache= TRUE, echo=FALSE }
 myControl <- trainControl(
   method = "cv",
   number = 5,
@@ -143,6 +121,7 @@ gbm.pred <- predict(model_gbm, news_test )
 gbm.probs <- predict(model_gbm, news_test,type="prob")
 gbm.confmat <- confusionMatrix(gbm.pred, news_test$popular, positive = "yes")
 
+gbm.confmat
 
 varImp(model_gbm)
 ```

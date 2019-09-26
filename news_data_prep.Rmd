@@ -8,39 +8,26 @@ library(tidyverse)
 library(caret)
 library(corrplot)
 library(party)
+library(gbm)
+library(reshape2)
+library(caTools)
+
 set.seed(1234)
 
  
 ```
 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(caret)
-library(ggplot2)
-library(dplyr)
-library(gbm)
-```
-
-
-## Including Plots
-
-You can also embed plots, for example:
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
 # 0. Read datasets
 ```{r}
 
  
+news_data <- read.csv('Data/dat_train.csv')
+
 str(news_data)
 #unique(news_data$n_non_stop_words)
 
-num<-unlist(lapply(news_data, is.numeric))
-news_data_cor<-news_data[,num]
-cor.matrix<-cor(news_data_cor)
-corrplot(cor.matrix, order="hclust", tl.pos='n')
-highcor<-findCorrelation(cor.matrix, cutoff=0.9, exact=TRUE, name=TRUE)
+
 
 #pairs(news_data)
 
@@ -49,14 +36,47 @@ highcor<-findCorrelation(cor.matrix, cutoff=0.9, exact=TRUE, name=TRUE)
 
 ```{r}
 
-plot(  news_data$shares, news_data$num_keywords)
+num<-unlist(lapply(news_data, is.numeric))
+news_data_cor<-news_data[,num]
+cor.matrix<-cor(news_data_cor)
+corrplot(cor.matrix, order="hclust", tl.pos='n')
+highcor<-findCorrelation(cor.matrix, cutoff=0.9, exact=TRUE, name=TRUE)
 
-unique( news_data$is_weekend )
+ 
+#distribution of target variable 
+table(news_data$popular)
 
-ggplot(df, aes(x=weight, color=sex)) +
-  geom_histogram(fill="white", alpha=0.5, position="identity")
+ 
+#Plot 
+
+ggplot(data=news_data, aes(is_weekend)) +
+  geom_bar(aes(fill = popular))
+
+ggplot(data=news_data, aes(kw_avg_avg  )) +
+  geom_histogram(aes(fill = popular), binwidth = 10)
+
+ggplot(data = melt(news_data[,-c(1,2,ncol(news_data))]), aes(x = value)) + 
+  stat_density() + 
+  facet_wrap(~variable, scales = "free")
 
 
+news_data %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram()
+
+
+
+
+
+#str(news_data)
+
+
+```
+# Data enginering 
+```{r}
 
 news_data$weekday_is_monday <- as.factor(news_data$weekday_is_monday )
 news_data$weekday_is_tuesday <- as.factor(news_data$weekday_is_tuesday )
@@ -65,32 +85,65 @@ news_data$weekday_is_thursday <- as.factor(news_data$weekday_is_thursday )
 news_data$weekday_is_friday <- as.factor(news_data$weekday_is_friday )
 news_data$weekday_is_saturday <- as.factor(news_data$weekday_is_saturday )
 news_data$weekday_is_sunday <- as.factor(news_data$weekday_is_sunday )
+news_data$is_weekend <- as.factor(news_data$is_weekend )
+
+news_data$popular<-as.factor(ifelse(news_data$shares>1400,"yes","no"))
+```
 
 
+# Test/Train
+
+```{r}
+ 
+## 80% of the sample size
+smp_size <- floor(0.80 * nrow(news_data))
 
 
-str(news_data)
+train_ind <- sample(seq_len(nrow(news_data)), size = smp_size)
 
-ggplot( aes(x=popular), data = news_data  )+
-  geom_histogram()
+news_train <- news_data[train_ind, ]
+news_test <- news_data[-train_ind, ]
+```
 
-arrange(unique(news_data$shares))
-
-table(news_data$popular)
-
-
-news_data <- read.csv('Data/dat_train.csv')
-news_data$popular<-ifelse(news_data$shares<1400,"yes","no")
-#str(news_data)
+# Model Creation 
+```{r}
 myControl <- trainControl(
   method = "cv",
   number = 5,
   verboseIter = FALSE
 )
-model_gbm <- train(popular ~., data = news_data[,!names(news_data) %in% c("url","timedelta","shares")], method = "gbm",
-                   trControl = myControl)
+model_gbm <- train(popular ~ kw_avg_avg	+
+                      self_reference_min_shares+
+                      is_weekend+
+                      kw_min_avg+
+                      kw_max_avg+
+                      kw_max_max	+
+                      self_reference_avg_sharess	+
+                      data_channel_is_socmed	+
+                      n_unique_tokens	 	+
+                      kw_avg_max+
+                      data_channel_is_entertainment	+
+                      LDA_02	+
+                      kw_avg_min 	+
+                      data_channel_is_tech	+
+                      LDA_00	 	+
+                      LDA_01	 	+
+                      title_sentiment_polarity	+
+                      weekday_is_saturday	+
+                      LDA_03 +
+                      global_subjectivity,
+                     data = news_train ,
+                     method = "gbm",
+                     trControl = myControl
+                   )
 model_gbm
 summary(model_gbm)
 
+gbm.pred <- predict(model_gbm, news_test )
+gbm.probs <- predict(model_gbm, news_test,type="prob")
+gbm.confmat <- confusionMatrix(gbm.pred, news_test$popular, positive = "yes")
+
+
+varImp(model_gbm)
 ```
 

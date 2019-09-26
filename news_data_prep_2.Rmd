@@ -20,7 +20,29 @@ news_data$popular<-ifelse(news_data$shares<1400,"no","yes")
 
 #1. Visualisation plots 
 ```{r}
+#plot(news_data$kw_avg_avg,news_data$shares,xlim=c(1,10000),ylim=c(1,20000))
+#abline(lm(news_data$shares~news_data$kw_avg_avg))
 
+ggplot(news_data, aes(as.factor(is_weekend)))+
+geom_bar(aes(fill = popular))+
+labs(x = "Article posted at the weekend",y = "Number of articles based on popularity")
+
+ggplot(news_data, aes(as.factor(data_channel_is_socmed)))+
+geom_bar(aes(fill = popular))+
+labs(x = "Social media channel",y = "Number of articles based on popularity")
+
+#ggplot(news_data, aes(x=factor(is_weekend), y=shares)) + stat_summary(fun.y="mean", geom="bar")
+#ggplot(news_data, aes(x=factor(data_channel_is_socmed ), y=shares)) + stat_summary(fun.y="mean", geom="bar")
+#ggplot(news_data, aes(x=factor(data_channel_is_tech), y=shares)) + stat_summary(fun.y="mean", geom="bar")
+
+
+ggplot(news_data, aes(x = news_data$kw_avg_avg)) +
+  geom_histogram(aes(color = popular, fill = popular), 
+                position = "identity", bins = 500, alpha = 0.4) +
+  coord_cartesian(xlim = c(0, 7500), ylim = c(0, 750))+
+labs(x = "Avg. keyword (avg. shares)")
+
+ 
 
 ```
 
@@ -38,13 +60,18 @@ model_gbm <- train(popular ~., data = news_data[,!names(news_data) %in% c("url",
 
 ```{r}
 model_gbm
-summary(model_gbm)
+#summary(model_gbm)
+
 plot(varImp(model_gbm),5)
 
- 
+
+gbm.pred1<-predict(model_gbm,newdata=news_data[,!names(news_data) %in% c("url","timedelta","shares")])
+ctable <- as.table(confusionMatrix(gbm.pred1,as.factor(news_data$popular)), nrow = 2, byrow = TRUE)
+fourfoldplot(ctable, color = c("#CC6666", "#99CC99"),
+             conf.level = 0, margin = 1, main = "Confusion Matrix")
 ```
 
-
+#2. Best practice approach for writing articles
 
 
 

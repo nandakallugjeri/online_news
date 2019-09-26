@@ -21,7 +21,7 @@ news_data <- read.csv('Data/dat_train.csv')
 news_data$popular<-ifelse(news_data$shares<1400,"no","yes")
 ```
 
-## 1. Visualisation plots 
+## What Are The Patterns in Our Data?
 
 ```{r}
 #plot(news_data$kw_avg_avg,news_data$shares,xlim=c(1,10000),ylim=c(1,20000))
@@ -55,10 +55,10 @@ corrplot(cor.matrix, order="hclust", tl.pos='n')
 ```
 
 
-## 4.Test/Train Dataset
 
-```{r , cache= TRUE}
- 
+
+```{r , cache= TRUE,include=FALSE}
+## 4.Test/Train Dataset
 ## 80% of the sample size
 smp_size <- floor(0.80 * nrow(news_data))
 train_ind <- sample(seq_len(nrow(news_data)), size = smp_size)
@@ -66,7 +66,7 @@ news_train <- news_data[train_ind, ]
 news_test <- news_data[-train_ind, ]
 ```
 
-## 3. Model 
+## Predictive Model 
 
 ```{r,cache=TRUE,include=FALSE}
 myControl <- trainControl(
@@ -91,7 +91,7 @@ fourfoldplot(ctable, color = c("#CC6666", "#99CC99"),
              conf.level = 0, margin = 1, main = "Confusion Matrix")
 ```
 
-## 2. Best practice approach for writing articles
+## Best Practice Approach For Writing Articles
 
 
 * publish during weekends

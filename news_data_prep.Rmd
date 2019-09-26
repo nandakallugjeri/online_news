@@ -23,18 +23,6 @@ library(gbm)
 ```
 
 
-<<<<<<< HEAD
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-
-```
-=======
->>>>>>> 3a7446b6410254ed48c1c668ab19f670402c5924
-
 ## Including Plots
 
 You can also embed plots, for example:
@@ -43,7 +31,7 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 
 # 0. Read datasets
 ```{r}
-<<<<<<< HEAD
+
 news_data <- read.csv('data/dat_train.csv')
 str(news_data)
 #unique(news_data$n_non_stop_words)
@@ -87,7 +75,10 @@ ggplot( aes(x=shares), data = news_data  )+
   geom_histogram(binwidth=10)
 
 arrange(unique(news_data$shares))
-=======
+
+
+
+
 news_data <- read.csv('Data/dat_train.csv')
 news_data$popular<-ifelse(news_data$shares<1400,"yes","no")
 #str(news_data)
@@ -100,6 +91,6 @@ model_gbm <- train(popular ~., data = news_data[,!names(news_data) %in% c("url",
                    trControl = myControl)
 model_gbm
 summary(model_gbm)
->>>>>>> 3a7446b6410254ed48c1c668ab19f670402c5924
+
 ```
 

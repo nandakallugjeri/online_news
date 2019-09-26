@@ -3,6 +3,17 @@ title: "news_data_prep"
 output: html_document
 ---
 
+```{r}
+library(tidyverse)
+library(caret)
+library(corrplot)
+library(party)
+set.seed(1234)
+
+ 
+```
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -15,15 +26,12 @@ When you click the **Knit** button a document will be generated that includes bo
 
 ```{r cars}
 summary(cars)
+
 ```
 
 ## Including Plots
 
 You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
@@ -31,5 +39,46 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 ```{r}
 news_data <- read.csv('data/dat_train.csv')
 str(news_data)
+#unique(news_data$n_non_stop_words)
+
+num<-unlist(lapply(news_data, is.numeric))
+news_data_cor<-news_data[,num]
+cor.matrix<-cor(news_data_cor)
+corrplot(cor.matrix, order="hclust", tl.pos='n')
+highcor<-findCorrelation(cor.matrix, cutoff=0.9, exact=TRUE, name=TRUE)
+
+#pairs(news_data)
+
+```
+#1. Visualisation plots 
+
+```{r}
+
+plot(  news_data$shares, news_data$num_keywords)
+
+unique( news_data$is_weekend )
+
+ggplot(df, aes(x=weight, color=sex)) +
+  geom_histogram(fill="white", alpha=0.5, position="identity")
+
+
+
+news_data$weekday_is_monday <- as.factor(news_data$weekday_is_monday )
+news_data$weekday_is_tuesday <- as.factor(news_data$weekday_is_tuesday )
+news_data$weekday_is_wednesday <- as.factor(news_data$weekday_is_wednesday )
+news_data$weekday_is_thursday <- as.factor(news_data$weekday_is_thursday )
+news_data$weekday_is_friday <- as.factor(news_data$weekday_is_friday )
+news_data$weekday_is_saturday <- as.factor(news_data$weekday_is_saturday )
+news_data$weekday_is_sunday <- as.factor(news_data$weekday_is_sunday )
+
+
+
+
+str(news_data)
+
+ggplot( aes(x=shares), data = news_data  )+
+  geom_histogram(binwidth=10)
+
+arrange(unique(news_data$shares))
 ```
 

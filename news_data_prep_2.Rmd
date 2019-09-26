@@ -12,13 +12,17 @@ library(gbm)
 library(tidyverse)
 library(corrplot)
 library(party)
+library(reshape2)
+library(caTools)
+ library(xgboost) 
 set.seed(1234)
 
 news_data <- read.csv('Data/dat_train.csv')
 news_data$popular<-ifelse(news_data$shares<1400,"no","yes")
 ```
 
-#1. Visualisation plots 
+## 1. Visualisation plots 
+
 ```{r}
 #plot(news_data$kw_avg_avg,news_data$shares,xlim=c(1,10000),ylim=c(1,20000))
 #abline(lm(news_data$shares~news_data$kw_avg_avg))
@@ -42,11 +46,27 @@ ggplot(news_data, aes(x = news_data$kw_avg_avg)) +
   coord_cartesian(xlim = c(0, 7500), ylim = c(0, 750))+
 labs(x = "Avg. keyword (avg. shares)")
 
- 
+
+num<-unlist(lapply(news_data, is.numeric))
+news_data_cor<-news_data[,num]
+cor.matrix<-cor(news_data_cor)
+corrplot(cor.matrix, order="hclust", tl.pos='n') 
 
 ```
 
-#2. Model 
+
+## 4.Test/Train Dataset
+
+```{r , cache= TRUE}
+ 
+## 80% of the sample size
+smp_size <- floor(0.80 * nrow(news_data))
+train_ind <- sample(seq_len(nrow(news_data)), size = smp_size)
+news_train <- news_data[train_ind, ]
+news_test <- news_data[-train_ind, ]
+```
+
+## 3. Model 
 
 ```{r,cache=TRUE,include=FALSE}
 myControl <- trainControl(
@@ -54,8 +74,8 @@ myControl <- trainControl(
   number = 5,
   verboseIter = FALSE
 )
-model_gbm <- train(popular ~., data = news_data[,!names(news_data) %in% c("url","timedelta","shares")], method = "gbm",
-                   trControl = myControl)
+model_gbm <- train(popular ~., data = news_train[,!names(news_train) %in% c("url","timedelta","shares")], method = "gbm",
+                   trControl = myControl,preProcess = c("corr"))
 ```
 
 ```{r}
@@ -65,14 +85,19 @@ model_gbm
 plot(varImp(model_gbm),5)
 
 
-gbm.pred1<-predict(model_gbm,newdata=news_data[,!names(news_data) %in% c("url","timedelta","shares")])
-ctable <- as.table(confusionMatrix(gbm.pred1,as.factor(news_data$popular)), nrow = 2, byrow = TRUE)
+gbm.pred1<-predict(model_gbm,newdata=news_test[,!names(news_test) %in% c("url","timedelta","shares")])
+ctable <- as.table(confusionMatrix(gbm.pred1,as.factor(news_test$popular)), nrow = 2, byrow = TRUE)
 fourfoldplot(ctable, color = c("#CC6666", "#99CC99"),
              conf.level = 0, margin = 1, main = "Confusion Matrix")
 ```
 
-#2. Best practice approach for writing articles
+## 2. Best practice approach for writing articles
 
+
+* publish during weekends
+* publish on at least one social media channel
+* keywords are important, use the words that were in popular articles before
+  
 
 
 
